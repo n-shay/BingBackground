@@ -1,7 +1,7 @@
-﻿using System.Runtime.InteropServices;
-
-namespace BingBackground
+﻿namespace BingBackground
 {
+    using System.Runtime.InteropServices;
+
 	internal sealed class NativeMethods
 	{
 		[DllImport("user32.dll", CharSet = CharSet.Auto)]

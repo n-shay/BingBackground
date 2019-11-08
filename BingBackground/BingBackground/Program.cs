@@ -1,6 +1,4 @@
-﻿[assembly: System.Resources.NeutralResourcesLanguage("en")]
-
-namespace BingBackground
+﻿namespace BingBackground
 {
     using System;
     using System.Reflection;

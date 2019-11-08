@@ -1,15 +1,14 @@
-﻿using Microsoft.Win32;
-using System;
-using System.IO;
-using System.Net;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace BingBackground
+﻿namespace BingBackground
 {
+    using System;
+    using System.IO;
     using System.Drawing;
-    using System.Reflection;
+    using System.Net;
     using System.Runtime.InteropServices;
+    using System.Threading;
+    using System.Threading.Tasks;
+
+    using Microsoft.Win32;
 
     using Newtonsoft.Json;
 
