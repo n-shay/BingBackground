@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.21005.1
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29503.13
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BingBackground", "BingBackground\BingBackground.csproj", "{2FE963BB-6404-43D1-AE54-8EE9B8EA66A9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BingBackground", "BingBackground\BingBackground.csproj", "{70492A9A-CDB6-44AB-AA57-0200DE7F0609}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,12 +11,15 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{2FE963BB-6404-43D1-AE54-8EE9B8EA66A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2FE963BB-6404-43D1-AE54-8EE9B8EA66A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2FE963BB-6404-43D1-AE54-8EE9B8EA66A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2FE963BB-6404-43D1-AE54-8EE9B8EA66A9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{70492A9A-CDB6-44AB-AA57-0200DE7F0609}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{70492A9A-CDB6-44AB-AA57-0200DE7F0609}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{70492A9A-CDB6-44AB-AA57-0200DE7F0609}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{70492A9A-CDB6-44AB-AA57-0200DE7F0609}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F7287D4B-8879-4189-A14E-6F1AEC3D6AB5}
 	EndGlobalSection
 EndGlobal
