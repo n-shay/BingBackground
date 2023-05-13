@@ -1,18 +1,31 @@
 ﻿namespace BingBackground
 {
     using System;
+    using System.IO;
     using System.Reflection;
-
     using Microsoft.Win32.TaskScheduler;
+    using Serilog;
+
+    using Task = System.Threading.Tasks.Task;
 
     public class Program
     {
-        private const string SCHEDULED_TASK_NAME = "BingBackground Scheduled Task";
-        private const string SCHEDULED_TASK_DESCRIPTION = "Updates the desktop wallpaper with Bing Background daily photo.";
+        private const int TimeoutSeconds = 45;
+        private const string ScheduledTaskName = "BingBackground Scheduled Task";
+        private const string ScheduledTaskDescription = "Updates the desktop wallpaper with Bing Background daily photo.";
 
-        private const int INTERVAL_MINUTES = 60;
+        private const int IntervalMinutes = 60;
 
-        public static void Main(string[] args)
+        private static readonly ILogger Logger = new LoggerConfiguration()
+            .WriteTo.File(
+                Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                    "BingBackground.log"),
+                rollingInterval: RollingInterval.Day,
+                retainedFileCountLimit: 30)
+            .CreateLogger();
+
+        public static async Task Main(string[] args)
         {
             if (args?.Length == 1)
             {
@@ -31,9 +44,25 @@
                 }
             }
 
-            using (var updater = new BingBackgroundUpdater())
+            try
             {
-                updater.Execute();
+                var updater = new BingBackgroundUpdater(Logger);
+
+                await updater.ExecuteAsync()
+                    .WaitAsync(TimeSpan.FromSeconds(TimeoutSeconds));
+
+
+                Logger.Information("Update Completed!");
+
+            }
+            catch (TimeoutException)
+            {
+                Logger.Warning("Operation timed-out!");
+            }
+
+            catch (Exception ex)
+            {
+                Logger.Error($"Failed updating background: {ex.Message}.", ex);
             }
 
             Environment.Exit(0);
@@ -44,13 +73,13 @@
             // Create a new task definition and assign properties
             var td = TaskService.Instance.NewTask();
 
-            td.RegistrationInfo.Description = SCHEDULED_TASK_DESCRIPTION;
+            td.RegistrationInfo.Description = ScheduledTaskDescription;
 
             // Create a trigger that will fire the task at this time every other day
             td.Triggers.Add(new DailyTrigger
             {
                 StartBoundary = DateTime.Today,
-                Repetition = new RepetitionPattern(TimeSpan.FromMinutes(INTERVAL_MINUTES),
+                Repetition = new RepetitionPattern(TimeSpan.FromMinutes(IntervalMinutes),
                     TimeSpan.Zero)
             });
             td.Triggers.Add(new LogonTrigger
@@ -64,12 +93,12 @@
             td.Principal.RunLevel = TaskRunLevel.Highest;
 
             // Register the task in the root folder
-            TaskService.Instance.RootFolder.RegisterTaskDefinition(SCHEDULED_TASK_NAME, td);
+            TaskService.Instance.RootFolder.RegisterTaskDefinition(ScheduledTaskName, td);
         }
 
         private static void RemoveScheduledTask()
         {
-            TaskService.Instance.RootFolder.DeleteTask(SCHEDULED_TASK_NAME, false);
+            TaskService.Instance.RootFolder.DeleteTask(ScheduledTaskName, false);
         }
     }
 }
