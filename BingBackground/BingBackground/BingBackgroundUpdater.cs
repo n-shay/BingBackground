@@ -3,13 +3,15 @@
     using System;
     using System.IO;
     using System.Drawing;
+    using System.Drawing.Imaging;
     using System.Net;
     using System.Net.Http;
-    using Newtonsoft.Json;
     using System.Runtime.InteropServices;
     using System.Threading.Tasks;
 
     using Microsoft.Win32;
+
+    using Newtonsoft.Json;
 
     using Serilog;
 
@@ -24,6 +26,11 @@
         private const string Proxy = null;
         private const int EnumCurrentSettings = -1;
 
+        private const int DefaultWidth = 1920;
+        private const int DefaultHeight = 1080;
+        private const int MaxWidth = 3840;
+        private const int MaxHeight = 2160;
+
         private readonly ILogger _logger;
 
         public BingBackgroundUpdater(ILogger logger)
@@ -33,17 +40,20 @@
 
         public async Task ExecuteAsync()
         {
-            var (_, url) = await GetBackgroundDataAsync();
+            var (title, url) = await GetBackgroundDataAsync();
 
-            await UpdateBackgroundAsync(url);
+            await UpdateBackgroundAsync(title, url);
         }
 
-        private async Task UpdateBackgroundAsync(string urlBase)
+        private async Task UpdateBackgroundAsync(string title, string urlBase)
         {
-            using var background = await DownloadBackgroundAsync(urlBase + await GetResolutionExtensionAsync(urlBase));
+            var (width, height) = GetResolution();
+            var url = $"{urlBase}&rf=LaDigue_UHD.jpg&pid=hp&w={width}&h={height}&rs=1&c=4";
+            using var background = await DownloadBackgroundAsync(url);
 
-            await SaveBackgroundAsync(background);
-            SetBackground(Position);
+            var imagePath = GetBackgroundImagePath();
+            await SaveBackgroundAsync(title, imagePath, background);
+            SetBackground(imagePath, Position);
         }
 
         private async Task<dynamic> DownloadJsonAsync()
@@ -63,15 +73,13 @@
             string copyrightText = jsonObject.images[0].copyright;
             var title = copyrightText.Substring(0, copyrightText.IndexOf(" (", StringComparison.Ordinal));
 
-            return (title, "https://www.bing.com" + jsonObject.images[0].urlbase);
+            return (title, $"https://www.bing.com{jsonObject.images[0].urlbase}_UHD.jpg");
         }
 
-        private static async Task<bool> WebsiteExistsAsync(string url)
+        private static async Task<bool> WebsiteExistsAsync(HttpClient client, string url)
         {
             try
             {
-                using var client = new HttpClient();
-
                 using var response = await client.SendAsync(new HttpRequestMessage(HttpMethod.Head, url));
                 response.EnsureSuccessStatusCode();
 
@@ -83,21 +91,21 @@
             }
         }
 
-        private async Task<string> GetResolutionExtensionAsync(string url)
+        private (int, int) GetResolution()
         {
             DEVMODE devMode = default;
             devMode.dmSize = (short)Marshal.SizeOf(devMode);
             EnumDisplaySettings(null, EnumCurrentSettings, ref devMode);
-            var widthByHeight = devMode.dmPelsWidth + "x" + devMode.dmPelsHeight;
-            var potentialExtension = $"_{widthByHeight}.jpg";
-            if (await WebsiteExistsAsync(url + potentialExtension))
-            {
-                _logger.Information($"Background for {widthByHeight} found.");
-                return potentialExtension;
-            }
 
-            _logger.Information($"No background for {widthByHeight} was found. Using 1920x1080 instead.");
-            return "_1920x1080.jpg";
+            _logger.Information($"Resolution is {devMode.dmPelsWidth}x{devMode.dmPelsHeight}.");
+
+            var resolution  = (devMode.dmPelsWidth > DefaultWidth || devMode.dmPelsHeight > DefaultHeight)
+                ? (MaxWidth, MaxHeight)
+                : (DefaultWidth, DefaultHeight);
+
+            _logger.Information($"Using {resolution.Item1}x{resolution.Item2}.");
+
+            return resolution;
         }
 
         private static void SetProxy()
@@ -120,12 +128,15 @@
             SetProxy();
 
             using var client = new HttpClient();
+
+            if (!await WebsiteExistsAsync(client, url))
+                throw new InvalidOperationException($"Background image not found ({url})");
+
             await using var stream = await client.GetStreamAsync(url);
 
-            if (stream == null)
-                throw new NullReferenceException("DownloadBackground: Response stream is null");
-
-            return Image.FromStream(stream);
+            return stream == null
+                ? throw new NullReferenceException("DownloadBackground: Response stream is null")
+                : Image.FromStream(stream);
         }
 
         private static string GetBackgroundImagePath()
@@ -136,13 +147,16 @@
             return Path.Combine(directory, DateTime.Now.ToString("M-d-yyyy") + ".bmp");
         }
 
-        private async Task SaveBackgroundAsync(Image background)
+        private async Task SaveBackgroundAsync(string title, string imagePath, Image background)
         {
             _logger.Information("Saving background...");
-            await Task.Run(() => background.Save(GetBackgroundImagePath(), System.Drawing.Imaging.ImageFormat.Bmp));
+            
+            // TODO: save title
+
+            await Task.Run(() => background.Save(imagePath, ImageFormat.Jpeg));
         }
 
-        private void SetBackground(PicturePosition style)
+        private void SetBackground(string imagePath, PicturePosition style)
         {
             _logger.Information("Setting background...");
             using (var key = Registry.CurrentUser.OpenSubKey(Path.Combine("Control Panel", "Desktop"), true))
@@ -176,8 +190,7 @@
                 }
             }
 
-            SystemParametersInfo(SetDesktopBackground, 0, GetBackgroundImagePath(),
-                UpdateIniFile | SendWindowsIniChange);
+            SystemParametersInfo(SetDesktopBackground, 0, imagePath, UpdateIniFile | SendWindowsIniChange);
         }
     }
 }
