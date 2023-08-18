@@ -13,7 +13,7 @@ jobs:
     runs-on: windows-latest
 
     env:
-      SOLUTION_PATH: BingBackground\BingBackground.sln
+      PROJECT_PATH: BingBackground\BingBackground\BingBackground.csproj
       OUTPUT_PATH: Publish
 
     steps:
@@ -23,9 +23,9 @@ jobs:
         with:
           dotnet-version: 6.0.x
       - name: Restore dependencies
-        run: dotnet restore $env:SOLUTION_PATH
+        run: dotnet restore $env:PROJECT_PATH
       - name: Publish
-        run: dotnet publish $env:SOLUTION_PATH --no-restore -c Release --os win-x64 --self-contained false -p:PublishSingleFile=true --version-suffix ${{ github.run_number }} --output $env:OUTPUT_PATH
+        run: dotnet publish $env:PROJECT_PATH --no-restore -c Release --os win-x64 --self-contained false -p:PublishSingleFile=true --version-suffix ${{ github.run_number }} --output $env:OUTPUT_PATH
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
