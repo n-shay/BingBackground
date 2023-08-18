@@ -2,12 +2,13 @@
 {
     using System;
     using System.IO;
-    using System.Drawing;
-    using System.Drawing.Imaging;
     using System.Net;
     using System.Net.Http;
     using System.Runtime.InteropServices;
+    using System.Text;
     using System.Threading.Tasks;
+
+    using ImageMagick;
 
     using Microsoft.Win32;
 
@@ -40,19 +41,19 @@
 
         public async Task ExecuteAsync()
         {
-            var (title, url) = await GetBackgroundDataAsync();
+            var (title, description, copyright, url) = await GetBackgroundDataAsync();
 
-            await UpdateBackgroundAsync(title, url);
+            await UpdateBackgroundAsync(title, description, copyright, url);
         }
 
-        private async Task UpdateBackgroundAsync(string title, string urlBase)
+        private async Task UpdateBackgroundAsync(string title, string description, string copyright, string urlBase)
         {
             var (width, height) = GetResolution();
             var url = $"{urlBase}&rf=LaDigue_UHD.jpg&pid=hp&w={width}&h={height}&rs=1&c=4";
             using var background = await DownloadBackgroundAsync(url);
 
             var imagePath = GetBackgroundImagePath();
-            await SaveBackgroundAsync(title, imagePath, background);
+            await SaveBackgroundAsync(title, description, copyright, imagePath, background); 
             SetBackground(imagePath, Position);
         }
 
@@ -66,14 +67,18 @@
             return JsonConvert.DeserializeObject<dynamic>(json);
         }
 
-        private async Task<(string Title, string Url)> GetBackgroundDataAsync()
+        private async Task<(string Title, string Description, string Copyright, string Url)> GetBackgroundDataAsync()
         {
             var jsonObject = await DownloadJsonAsync();
 
             string copyrightText = jsonObject.images[0].copyright;
-            var title = copyrightText.Substring(0, copyrightText.IndexOf(" (", StringComparison.Ordinal));
+            string title = jsonObject.images[0].title;
+            var i = copyrightText.IndexOf(" (", StringComparison.Ordinal);
+            var description = copyrightText[..i];
+            i += 2;
+            var copyright = i < copyrightText.Length ? copyrightText[i..].TrimEnd(')') : null;
 
-            return (title, $"https://www.bing.com{jsonObject.images[0].urlbase}_UHD.jpg");
+            return (title, description, copyright, $"https://www.bing.com{jsonObject.images[0].urlbase}_UHD.jpg");
         }
 
         private static async Task<bool> WebsiteExistsAsync(HttpClient client, string url)
@@ -121,7 +126,7 @@
             WebRequest.DefaultWebProxy = webProxy;
         }
 
-        private async Task<Image> DownloadBackgroundAsync(string url)
+        private async Task<MagickImage> DownloadBackgroundAsync(string url)
         {
             _logger.Information("Downloading background...");
 
@@ -136,7 +141,7 @@
 
             return stream == null
                 ? throw new NullReferenceException("DownloadBackground: Response stream is null")
-                : Image.FromStream(stream);
+                : new MagickImage(stream);
         }
 
         private static string GetBackgroundImagePath()
@@ -144,21 +149,34 @@
             var directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "Bing Backgrounds",
                 DateTime.Now.Year.ToString());
             Directory.CreateDirectory(directory);
-            return Path.Combine(directory, DateTime.Now.ToString("M-d-yyyy") + ".bmp");
+            return Path.Combine(directory, DateTime.Now.ToString("M-d-yyyy") + ".jpeg");
         }
 
-        private async Task SaveBackgroundAsync(string title, string imagePath, Image background)
+        private async Task SaveBackgroundAsync(string title, string description, string copyright, string imagePath, MagickImage background)
         {
-            _logger.Information("Saving background...");
-            
-            // TODO: save title
+            AddExifMetadata(background, title, description, copyright);
 
-            await Task.Run(() => background.Save(imagePath, ImageFormat.Jpeg));
+            _logger.Information("Saving background...");
+
+            await background.WriteAsync(imagePath, MagickFormat.Jpeg);
         }
+
+        private void AddExifMetadata(IMagickImage image, string title, string description, string copyright)
+        {
+            _logger.Information("Writing EXIF metadata...");
+            var profile = new ExifProfile();
+            profile.SetValue(ExifTag.XPTitle, Encoding.Unicode.GetBytes(title));
+            profile.SetValue(ExifTag.XPSubject, Encoding.Unicode.GetBytes(description));
+            if (!string.IsNullOrWhiteSpace(copyright)) profile.SetValue(ExifTag.Copyright, copyright);
+
+            image.SetProfile(profile);
+        }
+
 
         private void SetBackground(string imagePath, PicturePosition style)
         {
             _logger.Information("Setting background...");
+
             using (var key = Registry.CurrentUser.OpenSubKey(Path.Combine("Control Panel", "Desktop"), true))
             {
                 if (key == null)
@@ -190,7 +208,7 @@
                 }
             }
 
-            SystemParametersInfo(SetDesktopBackground, 0, imagePath, UpdateIniFile | SendWindowsIniChange);
+            _ = SystemParametersInfo(SetDesktopBackground, 0, imagePath, UpdateIniFile | SendWindowsIniChange);
         }
     }
 }
