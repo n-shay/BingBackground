@@ -40,7 +40,6 @@ jobs:
         uses: thedoctor0/zip-release@0.7.1
         with:
           directory: $env:OUTPUT_PATH
-          path: $env:OUTPUT_PATH
           type: 'zip'
           filename: 'release.zip'
       - name: Upload Release Asset
