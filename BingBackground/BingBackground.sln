@@ -1,9 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29503.13
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34009.444
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BingBackground", "BingBackground\BingBackground.csproj", "{70492A9A-CDB6-44AB-AA57-0200DE7F0609}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BingBackground", "BingBackground\BingBackground.csproj", "{70492A9A-CDB6-44AB-AA57-0200DE7F0609}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Other Items", "Other Items", "{921D25AA-157A-40B0-A0A5-05E6835A79AE}"
+	ProjectSection(SolutionItems) = preProject
+		..\LICENSE = ..\LICENSE
+		..\README.md = ..\README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
