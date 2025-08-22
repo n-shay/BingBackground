@@ -8,11 +8,13 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Other Items", "Other Items", "{921D25AA-157A-40B0-A0A5-05E6835A79AE}"
 	ProjectSection(SolutionItems) = preProject
 		..\.editorconfig = ..\.editorconfig
-		..\LICENSE = ..\LICENSE
-		..\README.md = ..\README.md
 		..\.gitattributes = ..\.gitattributes
 		..\.gitignore = ..\.gitignore
+		..\LICENSE = ..\LICENSE
+		..\README.md = ..\README.md
 	EndProjectSection
+EndProject
+Project("{B7DD6F7E-DEF8-4E67-B5B7-07EF123DB6F0}") = "BingBackground.Installer", "BingBackground.Installer\BingBackground.Installer.wixproj", "{3479ACA3-6A06-471A-AD54-BC8BB927A012}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -42,6 +44,22 @@ Global
 		{70492A9A-CDB6-44AB-AA57-0200DE7F0609}.Release|x64.Build.0 = Release|Any CPU
 		{70492A9A-CDB6-44AB-AA57-0200DE7F0609}.Release|x86.ActiveCfg = Release|Any CPU
 		{70492A9A-CDB6-44AB-AA57-0200DE7F0609}.Release|x86.Build.0 = Release|Any CPU
+		{3479ACA3-6A06-471A-AD54-BC8BB927A012}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{3479ACA3-6A06-471A-AD54-BC8BB927A012}.Debug|Any CPU.Build.0 = Debug|x64
+		{3479ACA3-6A06-471A-AD54-BC8BB927A012}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{3479ACA3-6A06-471A-AD54-BC8BB927A012}.Debug|ARM64.Build.0 = Debug|ARM64
+		{3479ACA3-6A06-471A-AD54-BC8BB927A012}.Debug|x64.ActiveCfg = Debug|x64
+		{3479ACA3-6A06-471A-AD54-BC8BB927A012}.Debug|x64.Build.0 = Debug|x64
+		{3479ACA3-6A06-471A-AD54-BC8BB927A012}.Debug|x86.ActiveCfg = Debug|x86
+		{3479ACA3-6A06-471A-AD54-BC8BB927A012}.Debug|x86.Build.0 = Debug|x86
+		{3479ACA3-6A06-471A-AD54-BC8BB927A012}.Release|Any CPU.ActiveCfg = Release|x64
+		{3479ACA3-6A06-471A-AD54-BC8BB927A012}.Release|Any CPU.Build.0 = Release|x64
+		{3479ACA3-6A06-471A-AD54-BC8BB927A012}.Release|ARM64.ActiveCfg = Release|ARM64
+		{3479ACA3-6A06-471A-AD54-BC8BB927A012}.Release|ARM64.Build.0 = Release|ARM64
+		{3479ACA3-6A06-471A-AD54-BC8BB927A012}.Release|x64.ActiveCfg = Release|x64
+		{3479ACA3-6A06-471A-AD54-BC8BB927A012}.Release|x64.Build.0 = Release|x64
+		{3479ACA3-6A06-471A-AD54-BC8BB927A012}.Release|x86.ActiveCfg = Release|x86
+		{3479ACA3-6A06-471A-AD54-BC8BB927A012}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

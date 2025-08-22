@@ -1,0 +1,10 @@
+﻿<Project Sdk="WixToolset.Sdk/6.0.1">
+    <PropertyGroup>
+        <DefineConstants>DeployPath=$(DeployPath)</DefineConstants>
+        <OutputType>Package</OutputType>
+        <InstallerPlatform>x64</InstallerPlatform>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\BingBackground\BingBackground.csproj" />
+    </ItemGroup>
+</Project>
