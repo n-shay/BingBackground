@@ -20,9 +20,9 @@ jobs:
         with:
           dotnet-version: 9.0.x
       - name: Restore Dependencies
-        run: dotnet restore $env:PROJECT_PATH --runtime win-x64
+        run: dotnet restore $env:PROJECT_PATH --runtime win-x64 -p:PublishReadyToRun=true
       - name: Publish
-        run: dotnet publish $env:PROJECT_PATH --runtime win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true --no-restore -c Release --output Publish
+        run: dotnet publish $env:PROJECT_PATH --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true --no-restore -c Release --output Publish
       - name: Build Installer
         run: dotnet build $env:INSTALLER_PATH -c Release --arch x64 -p:DeployPath=Publish --output Install
       - name: Create Release
