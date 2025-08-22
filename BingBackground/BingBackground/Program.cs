@@ -1,104 +1,41 @@
-﻿namespace BingBackground
-{
-    using System;
-    using System.IO;
-    using System.Reflection;
-    using Microsoft.Win32.TaskScheduler;
-    using Serilog;
+using System;
 
-    using Task = System.Threading.Tasks.Task;
+using BingBackground;
 
-    public class Program
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+
+var builder = Host.CreateDefaultBuilder(args)
+    .UseWindowsService(options =>
     {
-        private const int TimeoutSeconds = 45;
-        private const string ScheduledTaskName = "BingBackground Scheduled Task";
-        private const string ScheduledTaskDescription = "Updates the desktop wallpaper with Bing Background daily photo.";
+        options.ServiceName = "BingBackground Updater Service";
+    })
+    .ConfigureServices((context, services) =>
+    {
+        services.AddSingleton<BingBackgroundUpdater>();
+        services.AddHostedService<WindowsBackgroundService>();
 
-        private const int IntervalMinutes = 60;
-
-        private static readonly ILogger Logger = new LoggerConfiguration()
-            .WriteTo.File(
-                Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                    "BingBackground.log"),
-                rollingInterval: RollingInterval.Day,
-                retainedFileCountLimit: 30)
-            .CreateLogger();
-
-        public static async Task Main(string[] args)
+        // See: https://github.com/dotnet/runtime/issues/47303
+        services.AddLogging(builder =>
         {
-            if (args?.Length == 1)
+            builder.SetMinimumLevel(context.HostingEnvironment.IsDevelopment() ? LogLevel.Debug : LogLevel.Warning);
+
+            builder.AddFilter(LogFilter("Microsoft", LogLevel.Information))
+                .AddFilter(LogFilter("Microsoft.Hosting.Lifetime", LogLevel.Information))
+                .AddFilter(LogFilter("BingBackground", LogLevel.Information));
+
+            builder.AddEventLog(config =>
             {
-                switch (args[0].TrimStart('/', '-').ToLower())
-                {
-                    case "u":
-                    case "uninstall":
-                        RemoveScheduledTask();
-                        Environment.Exit(0);
-                        return;
-                    case "i":
-                    case "install":
-                        CreateScheduledTask();
-                        Environment.Exit(0);
-                        return;
-                }
-            }
-
-            try
-            {
-                var updater = new BingBackgroundUpdater(Logger);
-
-                await updater.ExecuteAsync()
-                    .WaitAsync(TimeSpan.FromSeconds(TimeoutSeconds));
-
-
-                Logger.Information("Update Completed!");
-
-            }
-            catch (TimeoutException)
-            {
-                Logger.Warning("Operation timed-out!");
-            }
-
-            catch (Exception ex)
-            {
-                Logger.Error($"Failed updating background: {ex.Message}.", ex);
-            }
-
-            Environment.Exit(0);
-        }
-
-        private static void CreateScheduledTask()
-        {
-            // Create a new task definition and assign properties
-            var td = TaskService.Instance.NewTask();
-
-            td.RegistrationInfo.Description = ScheduledTaskDescription;
-
-            // Create a trigger that will fire the task at this time every other day
-            td.Triggers.Add(new DailyTrigger
-            {
-                StartBoundary = DateTime.Today,
-                Repetition = new RepetitionPattern(TimeSpan.FromMinutes(IntervalMinutes),
-                    TimeSpan.Zero)
-            });
-            td.Triggers.Add(new LogonTrigger
-            {
-                Delay = TimeSpan.FromMinutes(1)
+                config.SourceName = "BingBackground";
             });
 
-            // Create an action that will launch Notepad whenever the trigger fires
-            td.Actions.Add(new ExecAction(Assembly.GetExecutingAssembly().Location));
+            return;
 
-            td.Principal.RunLevel = TaskRunLevel.Highest;
+            Func<string, LogLevel, bool> LogFilter(string categoryPrefix, LogLevel minimumLogLevel) =>
+                (category, logLevel) => category.StartsWith(categoryPrefix) && logLevel >= minimumLogLevel;
+        });
+    });
 
-            // Register the task in the root folder
-            TaskService.Instance.RootFolder.RegisterTaskDefinition(ScheduledTaskName, td);
-        }
-
-        private static void RemoveScheduledTask()
-        {
-            TaskService.Instance.RootFolder.DeleteTask(ScheduledTaskName, false);
-        }
-    }
-}
+var host = builder.Build();
+await host.RunAsync();

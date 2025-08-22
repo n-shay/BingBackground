@@ -1,11 +1,10 @@
-﻿namespace BingBackground
+﻿namespace BingBackground;
+
+internal enum PicturePosition
 {
-	internal enum PicturePosition
-	{
-		Tile,
-		Center,
-		Stretch,
-		Fit,
-		Fill
-	}
+    Tile,
+    Center,
+    Stretch,
+    Fit,
+    Fill
 }
