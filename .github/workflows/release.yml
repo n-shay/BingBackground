@@ -1,7 +1,4 @@
-# This workflow will build a .NET project
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
-
-name: BingBackground Release
+name: Release
 
 on:
   push:
@@ -14,17 +11,20 @@ jobs:
 
     env:
       PROJECT_PATH: BingBackground\BingBackground\BingBackground.csproj
+      INSTALLER_PATH: BingBackground\BingBackground.Installer\BingBackground.Installer.wixproj
 
     steps:
       - uses: actions/checkout@v3
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 6.0.x
-      - name: Restore dependencies
+          dotnet-version: 9.0.x
+      - name: Restore Dependencies
         run: dotnet restore $env:PROJECT_PATH
       - name: Publish
-        run: dotnet publish $env:PROJECT_PATH --no-restore -c Release --output Publish
+        run: dotnet publish $env:PROJECT_PATH --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true --no-restore -c Release --output Publish
+      - name: Build Installer
+        run: dotnet build $env:INSTALLER_PATH -c Release --arch x64 -p:DeployPath=Publish --output Install
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -35,19 +35,13 @@ jobs:
           release_name: BingBackground ${{ github.ref_name }}
           draft: false
           prerelease: false
-      - name: Archive Release
-        uses: thedoctor0/zip-release@0.7.1
-        with:
-          directory: Publish
-          type: 'zip'
-          filename: 'release.zip'
       - name: Upload Release Asset
-        id: upload-release-asset 
+        id: upload-release-asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: Publish\release.zip
-          asset_name: BingBackground.${{ github.ref_name }}.zip
-          asset_content_type: application/zip
+          asset_path: Install\en-US\BingBackground.Installer.msi
+          asset_name: BingBackground.${{ github.ref_name }}.msi
+          asset_content_type: application/x-msi
