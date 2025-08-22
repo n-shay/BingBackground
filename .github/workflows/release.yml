@@ -24,7 +24,7 @@ jobs:
       - name: Publish
         run: dotnet publish $env:PROJECT_PATH --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true --no-restore -c Release --output Publish
       - name: Build Installer
-        run: dotnet build $env:INSTALLER_PATH -c Release --arch x64 -p:DeployPath=Publish --output Install
+        run: dotnet build $env:INSTALLER_PATH -c Release --arch x64 -p:DeployPath=..\..\Publish --output Install
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
