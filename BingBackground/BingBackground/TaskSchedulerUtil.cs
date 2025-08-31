@@ -28,7 +28,7 @@ public class TaskSchedulerUtil
                 Repetition = new RepetitionPattern(TimeSpan.FromMinutes(INTERVAL_MINUTES), TimeSpan.Zero)
             });
             td.Triggers.Add(new LogonTrigger { Delay = TimeSpan.FromMinutes(1) });
-            td.Actions.Add(new ExecAction(fileName, workingDirectory: workingDirectory));
+            td.Actions.Add(new ExecAction(fileName, arguments: "--silent", workingDirectory: workingDirectory));
             td.Principal.RunLevel = TaskRunLevel.Highest;
             logger.LogDebug("Task Definition: {XML}", td.XmlText);
             TaskService.Instance.RootFolder.RegisterTaskDefinition(SCHEDULED_TASK_NAME, td);
