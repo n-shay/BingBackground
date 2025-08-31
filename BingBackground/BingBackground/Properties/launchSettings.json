@@ -1,0 +1,27 @@
+{
+  "profiles": {
+    "BingBackground": {
+      "commandName": "Project"
+    },
+    "BingBackground.Silent": {
+      "commandName": "Project",
+      "commandLineArgs": "--silent"
+    },
+    "BingBackground.Install": {
+      "commandName": "Project",
+      "commandLineArgs": "--install"
+    },
+    "BingBackground.Uninstall": {
+      "commandName": "Project",
+      "commandLineArgs": "--uninstall "
+    },
+    "BingBackground.InstallSilent": {
+      "commandName": "Project",
+      "commandLineArgs": "--install --silent"
+    },
+    "BingBackground.UninstallSilent": {
+      "commandName": "Project",
+      "commandLineArgs": "--uninstall --silent"
+    }
+  }
+}

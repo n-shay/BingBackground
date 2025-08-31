@@ -1,4 +1,4 @@
-﻿namespace BingBackground;
+namespace BingBackground;
 
 using System;
 using System.IO;
@@ -17,7 +17,7 @@ using Newtonsoft.Json;
 
 using static NativeMethods;
 
-public class BingBackgroundUpdater
+public class BingBackgroundUpdater(ILogger<BingBackgroundUpdater> logger)
 {
     internal const int SET_DESKTOP_BACKGROUND = 20;
     internal const int UPDATE_INI_FILE = 1;
@@ -31,12 +31,7 @@ public class BingBackgroundUpdater
     private const int MAX_WIDTH = 3840;
     private const int MAX_HEIGHT = 2160;
 
-    private readonly ILogger<BingBackgroundUpdater> logger;
-
-    public BingBackgroundUpdater(ILogger<BingBackgroundUpdater> logger)
-    {
-        this.logger = logger;
-    }
+    private readonly ILogger<BingBackgroundUpdater> logger = logger;
 
     public async Task ExecuteAsync()
     {
@@ -162,7 +157,7 @@ public class BingBackgroundUpdater
         await background.WriteAsync(imagePath, MagickFormat.Jpeg);
     }
 
-    private void AddExifMetadata(IMagickImage image, string title, string description, string copyright)
+    private void AddExifMetadata(MagickImage image, string title, string description, string copyright)
     {
         this.logger.LogInformation("Writing EXIF metadata...");
         var profile = new ExifProfile();

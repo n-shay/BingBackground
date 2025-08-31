@@ -1,41 +1,76 @@
+namespace BingBackground;
+
 using System;
+using System.Linq;
+using System.Threading.Tasks;
 
-using BingBackground;
-
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-var builder = Host.CreateDefaultBuilder(args)
-    .UseWindowsService(options =>
-    {
-        options.ServiceName = "BingBackground Updater Service";
-    })
-    .ConfigureServices((context, services) =>
-    {
-        services.AddSingleton<BingBackgroundUpdater>();
-        services.AddHostedService<WindowsBackgroundService>();
+public class Program
+{
 
-        // See: https://github.com/dotnet/runtime/issues/47303
-        services.AddLogging(builder =>
+    [STAThread]
+    public static async Task Main(string[] args)
+    {
+        var silent = args.Contains("--silent");
+        var loggerFactory = LoggerFactory.Create(builder => SetupLogging(builder, silent));
+
+        if (args.Contains("--uninstall"))
         {
-            builder.SetMinimumLevel(context.HostingEnvironment.IsDevelopment() ? LogLevel.Debug : LogLevel.Warning);
-
-            builder.AddFilter(LogFilter("Microsoft", LogLevel.Information))
-                .AddFilter(LogFilter("Microsoft.Hosting.Lifetime", LogLevel.Information))
-                .AddFilter(LogFilter("BingBackground", LogLevel.Information));
-
-            builder.AddEventLog(config =>
+            TaskSchedulerUtil.RemoveScheduledTask(loggerFactory);
+            Environment.Exit(0);
+        }
+        else if (args.Contains("--install"))
+        {
+            TaskSchedulerUtil.CreateScheduledTask(loggerFactory);
+            Environment.Exit(0);
+        }
+        else if (silent)
+        {
+            var exit = await RunOnceHelper.UpdateBackground(loggerFactory);
+            Environment.Exit(exit);
+        }
+        else
+        {
+            // If no arguments provided, open a small UI window.
+            try
             {
-                config.SourceName = "BingBackground";
-            });
+                System.Windows.Forms.Application.EnableVisualStyles();
+                System.Windows.Forms.Application.SetCompatibleTextRenderingDefault(false);
+                System.Windows.Forms.Application.Run(new MainForm(loggerFactory));
+            }
+            catch (Exception ex)
+            {
+                var logger = loggerFactory.CreateLogger<Program>();
+                logger.LogError(ex, "Unhandled exception: {Error}", ex.Message);
+                Environment.Exit(1);
+            }
+        }
+    }
 
-            return;
+    private static void SetupLogging(ILoggingBuilder builder, bool silent)
+    {
+#if DEBUG
+        const LogLevel MINIMAL_LEVEL = LogLevel.Debug;
+#else
+        const LogLevel MINIMAL_LEVEL = LogLevel.Information;
+#endif
+        builder.SetMinimumLevel(MINIMAL_LEVEL);
+        builder.AddFilter(LogFilter("Microsoft", LogLevel.Information))
+               .AddFilter(LogFilter("BingBackground", LogLevel.Information));
+        if (silent)
+        {
+            builder.AddEventLog(config => { config.SourceName = "BingBackground"; });
+        }
+        else
+        {
+            builder.AddConsole();
+        }
 
-            Func<string, LogLevel, bool> LogFilter(string categoryPrefix, LogLevel minimumLogLevel) =>
-                (category, logLevel) => category.StartsWith(categoryPrefix) && logLevel >= minimumLogLevel;
-        });
-    });
+        return;
 
-var host = builder.Build();
-await host.RunAsync();
+        static Func<string, LogLevel, bool> LogFilter(string categoryPrefix, LogLevel minimumLogLevel) =>
+            (category, logLevel) => category.StartsWith(categoryPrefix) && logLevel >= minimumLogLevel;
+    }
+
+}
