@@ -12,12 +12,13 @@
     <PublishTrimmed Condition="'$(Configuration)' == 'Release'">true</PublishTrimmed>
     <RootNamespace>BingBackground</RootNamespace>
     <ApplicationIcon>icon.ico</ApplicationIcon>
-    <VersionPrefix>2.1.1</VersionPrefix>
+    <VersionPrefix>2.1.2</VersionPrefix>
     <Authors>Shay Nissel</Authors>
     <Company>5HP Digital</Company>
     <ProductName>BingBackground</ProductName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <_SuppressWinFormsTrimError>true</_SuppressWinFormsTrimError>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
   </PropertyGroup>
 
   <ItemGroup>

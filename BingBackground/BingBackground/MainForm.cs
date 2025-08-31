@@ -76,7 +76,8 @@ public class MainForm : Form
         try
         {
             // copy current executable to directory
-            var sourceFileName = FileHelper.GetExecutingFileName();
+            var sourceFileName = Environment.ProcessPath;
+            if (sourceFileName == null) throw new Exception("Could not determine current executable path.");
 
             var dirInfo = Directory.CreateDirectory(Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "BingBackground"));
@@ -108,7 +109,9 @@ public class MainForm : Form
                 "BingBackground");
             if (Directory.Exists(dirPath))
             {
-                var executingFileName = FileHelper.GetExecutingFileName();
+                var executingFileName = Environment.ProcessPath;
+                if (executingFileName == null) throw new Exception("Could not determine current executable path.");
+
                 var fileToUninstall = Path.Combine(dirPath, BINGBACKGROUND_EXE);
 
                 if (fileToUninstall != executingFileName)

@@ -23,7 +23,7 @@ public class Program
         }
         else if (args.Contains("--install"))
         {
-            var fileName = FileHelper.GetExecutingFileName();
+            var fileName = Environment.ProcessPath;
 
             TaskSchedulerUtil.CreateScheduledTask(loggerFactory, Path.GetFileName(fileName), AppContext.BaseDirectory);
             Environment.Exit(0);
