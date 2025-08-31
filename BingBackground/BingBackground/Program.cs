@@ -1,6 +1,7 @@
 namespace BingBackground;
 
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -22,7 +23,9 @@ public class Program
         }
         else if (args.Contains("--install"))
         {
-            TaskSchedulerUtil.CreateScheduledTask(loggerFactory);
+            var fileName = FileHelper.GetExecutingFileName();
+
+            TaskSchedulerUtil.CreateScheduledTask(loggerFactory, Path.GetFileName(fileName), AppContext.BaseDirectory);
             Environment.Exit(0);
         }
         else if (silent)
@@ -72,5 +75,4 @@ public class Program
         static Func<string, LogLevel, bool> LogFilter(string categoryPrefix, LogLevel minimumLogLevel) =>
             (category, logLevel) => category.StartsWith(categoryPrefix) && logLevel >= minimumLogLevel;
     }
-
 }

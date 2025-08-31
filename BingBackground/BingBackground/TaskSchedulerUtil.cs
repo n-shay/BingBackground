@@ -1,18 +1,21 @@
 namespace BingBackground;
 
 using System;
+using System.Diagnostics;
+using System.IO;
+using System.Reflection;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32.TaskScheduler;
 
 public class TaskSchedulerUtil
 {
-    internal const string SCHEDULED_TASK_NAME = "BingBackground Scheduled Task";
+    private const string SCHEDULED_TASK_NAME = "BingBackground Scheduled Task";
     private const string SCHEDULED_TASK_DESCRIPTION = "Updates the desktop wallpaper with Bing Background daily photo.";
 
     private const int INTERVAL_MINUTES = 60;
 
-    public static void CreateScheduledTask(ILoggerFactory loggerFactory)
+    public static void CreateScheduledTask(ILoggerFactory loggerFactory, string fileName, string workingDirectory)
     {
         var logger = loggerFactory.CreateLogger<TaskSchedulerUtil>();
         try
@@ -25,7 +28,7 @@ public class TaskSchedulerUtil
                 Repetition = new RepetitionPattern(TimeSpan.FromMinutes(INTERVAL_MINUTES), TimeSpan.Zero)
             });
             td.Triggers.Add(new LogonTrigger { Delay = TimeSpan.FromMinutes(1) });
-            td.Actions.Add(new ExecAction("BingBackground.exe", arguments: "--silent", workingDirectory: AppContext.BaseDirectory));
+            td.Actions.Add(new ExecAction(fileName, workingDirectory: workingDirectory));
             td.Principal.RunLevel = TaskRunLevel.Highest;
             logger.LogDebug("Task Definition: {XML}", td.XmlText);
             TaskService.Instance.RootFolder.RegisterTaskDefinition(SCHEDULED_TASK_NAME, td);

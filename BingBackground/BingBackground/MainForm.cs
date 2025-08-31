@@ -1,13 +1,17 @@
 namespace BingBackground;
 
 using System;
+using System.IO;
 using System.Windows.Forms;
 
 using Microsoft.Extensions.Logging;
 
 public class MainForm : Form
 {
+    private const string BINGBACKGROUND_EXE = "BingBackground.exe";
+
     private readonly ILoggerFactory loggerFactory;
+    private readonly ILogger logger;
     private readonly Button btnInstall = new() { Text = "Install", AutoSize = true };
     private readonly Button btnUninstall = new() { Text = "Uninstall", AutoSize = true };
     private readonly Button btnSetNow = new() { Text = "Set Wallpaper Now", AutoSize = true };
@@ -15,6 +19,7 @@ public class MainForm : Form
     public MainForm(ILoggerFactory loggerFactory)
     {
         this.loggerFactory = loggerFactory;
+        this.logger = loggerFactory.CreateLogger<MainForm>();
         this.Text = "BingBackground";
         this.StartPosition = FormStartPosition.CenterScreen;
         this.FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -59,8 +64,6 @@ public class MainForm : Form
         this.btnSetNow.Click += async (_, _) => await this.OnSetNowAsync();
     }
 
-
-
     private void RefreshButtonsState()
     {
         var exists = TaskSchedulerUtil.TaskExists();
@@ -72,12 +75,25 @@ public class MainForm : Form
     {
         try
         {
-            TaskSchedulerUtil.CreateScheduledTask(this.loggerFactory);
+            // copy current executable to directory
+            var sourceFileName = FileHelper.GetExecutingFileName();
+
+            var dirInfo = Directory.CreateDirectory(Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "BingBackground"));
+            if (!dirInfo.Exists)
+                throw new Exception("Failed to create directory.");
+
+            File.Copy(sourceFileName, Path.Combine(dirInfo.FullName, BINGBACKGROUND_EXE), true);
+
+            this.logger.LogInformation("Copied files");
+
+            TaskSchedulerUtil.CreateScheduledTask(this.loggerFactory, BINGBACKGROUND_EXE, dirInfo.FullName);
             this.RefreshButtonsState();
             await System.Threading.Tasks.Task.CompletedTask;
         }
         catch (Exception ex)
         {
+            this.logger.LogError(ex, "Failed to install scheduled task.");
             MessageBox.Show(this, $"Failed to install scheduled task.\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
@@ -87,10 +103,27 @@ public class MainForm : Form
         try
         {
             TaskSchedulerUtil.RemoveScheduledTask(this.loggerFactory);
+
+            var dirPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "BingBackground");
+            if (Directory.Exists(dirPath))
+            {
+                var executingFileName = FileHelper.GetExecutingFileName();
+                var fileToUninstall = Path.Combine(dirPath, BINGBACKGROUND_EXE);
+
+                if (fileToUninstall != executingFileName)
+                {
+                    Directory.Delete(dirPath, true);
+
+                    this.logger.LogInformation("Removed files");
+                }
+            }
+
             this.RefreshButtonsState();
         }
         catch (Exception ex)
         {
+            this.logger.LogError(ex, "Failed to remove scheduled task.");
             MessageBox.Show(this, $"Failed to remove scheduled task.\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
