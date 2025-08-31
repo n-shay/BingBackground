@@ -11,7 +11,6 @@ jobs:
 
     env:
       PROJECT_PATH: BingBackground\BingBackground\BingBackground.csproj
-      INSTALLER_PATH: BingBackground\BingBackground.Installer\BingBackground.Installer.wixproj
 
     steps:
       - uses: actions/checkout@v3
@@ -23,8 +22,6 @@ jobs:
         run: dotnet restore $env:PROJECT_PATH --runtime win-x64 -p:PublishReadyToRun=true
       - name: Publish
         run: dotnet publish $env:PROJECT_PATH --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true --no-restore -c Release --output Publish
-      - name: Build Installer
-        run: dotnet build $env:INSTALLER_PATH -c Release --arch x64 -p:DeployPath=..\..\Publish --output Install
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -42,6 +39,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: Install\en-US\BingBackground.Installer.msi
-          asset_name: BingBackground.${{ github.ref_name }}.msi
-          asset_content_type: application/x-msi
+          asset_path: Publish\BingBackground.exe
+          asset_name: BingBackground.${{ github.ref_name }}.exe
+          asset_content_type: application/vnd.microsoft.portable-executable
